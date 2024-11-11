@@ -1,4 +1,4 @@
-# app/routes/image_related.py
+# app/routes/facefeature.py
 
 import io
 from flask import Blueprint, request, jsonify, current_app
@@ -13,16 +13,15 @@ from app.models.user import User
 from app.utils.image_processing import allowed_file, is_image_file
 from app.utils.ml_model import extract_features, process_new_images, find_matching_faces
 
-bp = Blueprint('image_related', __name__, url_prefix='/api/projects')
+bp = Blueprint('facefeature', __name__, url_prefix='/facefeature')
 
 logger = logging.getLogger(__name__)
 
-@bp.route('/<project_id>/upload', methods=['POST'])
+@bp.route('/imagesupload/<string:project_id>', methods=['POST'])
 @jwt_required()
-def upload_images(project_id):
+def upload_images_to_project(project_id):
     """
-    Uploads multiple images to a specific project, processes them for face detection and clustering,
-    stores them in GridFS, and associates them with the project.
+    Uploads multiple images to a specific project and processes them to detect faces.
     """
     user_id = get_jwt_identity()
     user = User.objects(id=user_id).first()
@@ -66,6 +65,7 @@ def upload_images(project_id):
             if existing_face:
                 saved_faces.append({
                     'face_id': str(existing_face.id),
+                    'gridfs_id':str(existing_face.gridfs_id),
                     'message': 'Duplicate image detected.'
                 })
                 continue  # Skip processing this duplicate image
@@ -136,6 +136,7 @@ def upload_images(project_id):
         if face:
             saved_faces.append({
                 'face_id': str(face.id),
+                'gridfs_id':str(face.gridfs_id),
                 'message': 'Image uploaded and processed successfully.'
             })
         else:
@@ -143,15 +144,11 @@ def upload_images(project_id):
 
     return jsonify({'saved_faces': saved_faces}), 201
 
-# app/routes/image_related.py
-
-@bp.route('/<project_id>/related_images', methods=['POST'])
+@bp.route('/find_faces/<string:project_id>', methods=['POST'])
 @jwt_required()
-def find_related_images_route(project_id):
+def find_matching_faces_route(project_id):
     """
-    Upload a new image to a project and retrieve all related images based on facial similarity.
-    This endpoint does NOT store the uploaded image or create a Face document.
-    It only uses the uploaded image to find similar faces in existing project images.
+    Uploads a query image to find matching faces within a specific project.
     """
     user_id = get_jwt_identity()
     user = User.objects(id=user_id).first()
@@ -213,6 +210,5 @@ def find_related_images_route(project_id):
 
     return jsonify({
         'message': 'Image processed successfully.',
-        'related_image_ids': related_image_ids
+        'matching_images': related_image_ids
     }), 200
-

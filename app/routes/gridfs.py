@@ -2,6 +2,7 @@
 
 from flask import Blueprint, Response, current_app
 from bson import ObjectId
+from flask_jwt_extended import jwt_required, get_jwt_identity
 import gridfs
 import logging
 
@@ -10,6 +11,7 @@ bp = Blueprint('gridfs', __name__, url_prefix='/api/gridfs')
 logger = logging.getLogger(__name__)
 
 @bp.route('/<gridfs_id>', methods=['GET'])
+@jwt_required(locations=["headers","cookies","query_string"])
 def get_image(gridfs_id):
     """
     Serves an image stored in GridFS based on its ID.

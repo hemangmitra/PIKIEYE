@@ -6,7 +6,7 @@ from flask import Flask
 from flask_cors import CORS
 from dotenv import load_dotenv
 
-from .routes import auth, project, image_related, unique_faces, health, gridfs
+from .routes import auth, facefeature, project, unique_faces, health, gridfs
 from .extension import jwt, limiter, init_db
 
 # Load environment variables from .env file
@@ -68,7 +68,7 @@ def create_app():
     # Register Blueprints
     app.register_blueprint(auth.bp)
     app.register_blueprint(project.bp)
-    app.register_blueprint(image_related.bp)
+    app.register_blueprint(facefeature.bp)
     app.register_blueprint(unique_faces.bp)
     app.register_blueprint(health.bp)
     app.register_blueprint(gridfs.bp)  # Register GridFS blueprint
